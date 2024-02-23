@@ -28,7 +28,8 @@ pub struct PhysicsSimulation {
 }
 
 const GRAVITATIONAL_CONSTANT: f64 = 6.67430e-11;
-const TIME_STEP: f64 = 1.0e-7;
+const TIME_STEP: f64 = 1.0e-3;
+const DISTANCE_MULTIPLIER: f64 = 1.0e6;
 
 impl PhysicsSimulation {
 
@@ -51,7 +52,7 @@ impl PhysicsSimulation {
                 color: [rng.gen_range(100..200), rng.gen_range(100..200), rng.gen_range(100..200), 255],
                 position: Position2 { x: rng.gen_range(20.0..(WIDTH as f64)-20.0), y: rng.gen_range(20.0..(HEIGHT as f64)-20.0) },
                 velocity: Velocity2 { x: 0.0, y: 0.0 },
-                mass: rng.gen_range(1_000_000_000.0..10_000_000_000.0)
+                mass: rng.gen_range(1.0e22..1.0e26)
             });
 
         }
@@ -71,10 +72,17 @@ impl PhysicsSimulation {
                     continue;
                 }
 
-                let pos_vector = self.gravitational_bodies[i].position.vector(&self.gravitational_bodies[i].position);
-                let distance   = pos_vector.magnitude();
-                let angle      = pos_vector.angle_from_normal();
-                let force = GRAVITATIONAL_CONSTANT * (self.gravitational_bodies[i].mass * self.gravitational_bodies[j].mass) / distance.powi(2);
+                let pos_vector = self.gravitational_bodies[i].position.vector(&self.gravitational_bodies[j].position);
+                let distance_squared = pos_vector.magnitude().powi(2) * DISTANCE_MULTIPLIER;
+
+                if distance_squared <= DISTANCE_MULTIPLIER {
+                    println!("Distance too small");
+                    continue;
+                }
+
+                let angle = pos_vector.angle_from_normal();
+
+                let force = GRAVITATIONAL_CONSTANT * (self.gravitational_bodies[i].mass * self.gravitational_bodies[j].mass) / (distance_squared);
 
                 let force_vector = Vector2 {
                     x: force * angle.cos(),
@@ -82,8 +90,8 @@ impl PhysicsSimulation {
                 };
 
                 let accleration = Vector2 {
-                    x: (force_vector.x / self.gravitational_bodies[i].mass)/1e10,
-                    y: (force_vector.y / self.gravitational_bodies[i].mass)/1e10
+                    x: (force_vector.x / self.gravitational_bodies[i].mass),
+                    y: (force_vector.y / self.gravitational_bodies[i].mass)
                 };
 
                 self.gravitational_bodies[i].velocity.x += accleration.x * TIME_STEP;

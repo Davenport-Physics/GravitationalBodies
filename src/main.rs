@@ -73,16 +73,16 @@ impl MyWindowHandler {
 
         let mut sim = PhysicsSimulation::new();
 
-        event_loop.run(|event, target| {
+        event_loop.run(|event, _target| {
 
             match event {
         
-                Event::WindowEvent { window_id, event } => {
+                Event::WindowEvent { window_id: _, event } => {
 
                     match event {
                         WindowEvent::RedrawRequested => {
 
-                            //sim.tick();
+                            sim.tick();
                             sim.draw(self.pixels.frame_mut());
                             self.pixels.render().unwrap();
                             
@@ -96,6 +96,13 @@ impl MyWindowHandler {
                         _ => {}
                     }
 
+                },
+                Event::AboutToWait => {
+                    /*
+                    sim.tick();
+                    sim.draw(self.pixels.frame_mut());
+                    self.pixels.render().unwrap();
+                    */
                 }
 
                 _ => {}
